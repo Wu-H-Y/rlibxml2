@@ -1,6 +1,6 @@
 # rlibxml2
 
-[![CI](https://github.com/your-username/rlibxml2/workflows/CI/badge.svg)](https://github.com/your-username/rlibxml2/actions)
+[![CI](https://github.com/Wu-H-Y/rlibxml2/workflows/CI/badge.svg)](https://github.com/Wu-H-Y/rlibxml2/actions)
 
 安全的 Rust HTML/XML 解析与 XPath 查询库，基于 [libxml2](https://gitlab.gnome.org/GNOME/libxml2) 封装。
 

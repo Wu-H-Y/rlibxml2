@@ -169,7 +169,7 @@ impl Document {
                 c_html.as_ptr(),
                 html.len() as i32,
                 ptr::null(),
-                b"UTF-8\0".as_ptr() as *const i8,
+                b"UTF-8\0".as_ptr().cast(),
                 raw_options,
             );
 
@@ -306,7 +306,7 @@ impl Document {
                     if stringval.is_null() {
                         XPathResult::String(String::new())
                     } else {
-                        let c_str = CStr::from_ptr(stringval as *const i8);
+                        let c_str = CStr::from_ptr(stringval.cast());
                         XPathResult::String(c_str.to_string_lossy().into_owned())
                     }
                 }
@@ -498,9 +498,9 @@ impl SelectedNode {
                 return String::new();
             }
 
-            let c_str = CStr::from_ptr(text_ptr as *const i8);
+            let c_str = CStr::from_ptr(text_ptr.cast());
             let result = c_str.to_string_lossy().into_owned();
-            free_xml_char(text_ptr as *mut xmlChar);
+            free_xml_char(text_ptr.cast());
             result
         }
     }
@@ -511,7 +511,7 @@ impl SelectedNode {
             if (*self.node_ptr).name.is_null() {
                 return String::new();
             }
-            let c_str = CStr::from_ptr((*self.node_ptr).name as *const i8);
+            let c_str = CStr::from_ptr((*self.node_ptr).name.cast());
             c_str.to_string_lossy().into_owned()
         }
     }
@@ -523,9 +523,9 @@ impl SelectedNode {
             if path_ptr.is_null() {
                 return String::new();
             }
-            let c_str = CStr::from_ptr(path_ptr as *const i8);
+            let c_str = CStr::from_ptr(path_ptr.cast());
             let result = c_str.to_string_lossy().into_owned();
-            free_xml_char(path_ptr as *mut xmlChar);
+            free_xml_char(path_ptr.cast());
             result
         }
     }
