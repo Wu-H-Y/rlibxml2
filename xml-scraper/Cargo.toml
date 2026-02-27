@@ -1,0 +1,11 @@
+[package]
+name = "xml-scraper"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Safe Rust bindings for libxml2, optimized for web scraping"
+
+[dependencies]
+libxml2-sys = { path = "../libxml2-sys" }
+thiserror = "2"

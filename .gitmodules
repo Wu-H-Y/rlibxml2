@@ -1,0 +1,3 @@
+[submodule "libxml2-sys/libxml2_src"]
+	path = libxml2-sys/libxml2_src
+	url = https://gitlab.gnome.org/GNOME/libxml2.git
