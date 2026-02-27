@@ -150,7 +150,7 @@ impl Document {
         let c_html = CString::new(html).map_err(|_| Error::NullByte)?;
 
         unsafe {
-            let mut raw_options: i32 = 0;
+            let mut raw_options: htmlParserOption = 0;
 
             if options.recover {
                 raw_options |= htmlParserOption_HTML_PARSE_RECOVER;
