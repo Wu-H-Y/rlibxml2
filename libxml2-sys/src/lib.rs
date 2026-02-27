@@ -75,10 +75,10 @@ pub type xmlHashTablePtr = *mut xmlHashTable;
 pub unsafe fn free_xml_char(ptr: *mut xmlChar) {
     // SAFETY: 调用者保证 ptr 是有效的 libxml2 分配的指针或 null
     unsafe {
-        if !ptr.is_null() {
-            if let Some(free_fn) = xmlFree {
-                free_fn(ptr as *mut std::ffi::c_void);
-            }
+        if !ptr.is_null()
+            && let Some(free_fn) = xmlFree
+        {
+            free_fn(ptr as *mut std::ffi::c_void);
         }
     }
 }

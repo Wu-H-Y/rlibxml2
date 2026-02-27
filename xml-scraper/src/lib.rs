@@ -153,23 +153,23 @@ impl Document {
             let mut raw_options: i32 = 0;
 
             if options.recover {
-                raw_options |= htmlParserOption_HTML_PARSE_RECOVER as i32;
+                raw_options |= htmlParserOption_HTML_PARSE_RECOVER;
             }
             if options.no_error {
-                raw_options |= htmlParserOption_HTML_PARSE_NOERROR as i32;
+                raw_options |= htmlParserOption_HTML_PARSE_NOERROR;
             }
             if options.no_warning {
-                raw_options |= htmlParserOption_HTML_PARSE_NOWARNING as i32;
+                raw_options |= htmlParserOption_HTML_PARSE_NOWARNING;
             }
             if options.no_blanks {
-                raw_options |= htmlParserOption_HTML_PARSE_NOBLANKS as i32;
+                raw_options |= htmlParserOption_HTML_PARSE_NOBLANKS;
             }
 
             let doc_ptr = htmlReadMemory(
                 c_html.as_ptr(),
                 html.len() as i32,
                 ptr::null(),
-                b"UTF-8\0".as_ptr().cast(),
+                c"UTF-8".as_ptr(),
                 raw_options,
             );
 
@@ -552,6 +552,10 @@ impl SelectedNode {
     }
 
     /// 获取原始节点指针
+    ///
+    /// # Safety
+    ///
+    /// 调用者必须确保在使用返回的指针期间，`SelectedNode` 仍然存活
     pub unsafe fn as_ptr(&self) -> xmlNodePtr {
         self.node_ptr
     }
