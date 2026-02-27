@@ -170,7 +170,7 @@ impl Document {
                 html.len() as i32,
                 ptr::null(),
                 c"UTF-8".as_ptr(),
-                raw_options,
+                raw_options as i32,
             );
 
             if doc_ptr.is_null() {
