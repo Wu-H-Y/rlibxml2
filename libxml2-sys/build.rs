@@ -1,70 +1,5 @@
 use std::env;
-use std::path::{Path, PathBuf};
-
-/// 查找库文件目录和库名称
-fn find_library(dst: &Path, target: &str) -> (PathBuf, String) {
-    // 可能的库目录
-    let possible_dirs = [
-        dst.join("lib"),
-        dst.join("Lib"),
-        dst.join("lib").join("Release"),
-        dst.join("lib").join("Debug"),
-        dst.join("build").join("lib"),
-        dst.join("build").join("Debug"),
-    ];
-
-    // Windows 上可能的库名称
-    let possible_lib_names: &[&str] = if target.contains("windows") {
-        &[
-            "libxml2sd",
-            "libxml2s",
-            "libxml2d",
-            "libxml2",
-            "xml2sd",
-            "xml2s",
-            "xml2",
-        ]
-    } else {
-        &["xml2"]
-    };
-
-    for dir in &possible_dirs {
-        if dir.exists() {
-            for lib_name in possible_lib_names {
-                let lib_file = if target.contains("windows") {
-                    dir.join(format!("{}.lib", lib_name))
-                } else {
-                    dir.join(format!("lib{}.a", lib_name))
-                };
-                if lib_file.exists() {
-                    return (dir.clone(), lib_name.to_string());
-                }
-            }
-        }
-    }
-
-    // 默认返回
-    (
-        dst.join("lib"),
-        if target.contains("windows") {
-            "libxml2"
-        } else {
-            "xml2"
-        }
-        .to_string(),
-    )
-}
-
-/// 查找头文件目录
-fn find_include_dir(dst: &Path) -> PathBuf {
-    let possible_dirs = [dst.join("include").join("libxml2"), dst.join("include")];
-    for dir in &possible_dirs {
-        if dir.exists() {
-            return dir.clone();
-        }
-    }
-    dst.join("include").join("libxml2")
-}
+use std::path::PathBuf;
 
 fn main() {
     let target = env::var("TARGET").unwrap();
@@ -125,8 +60,22 @@ fn main() {
     let dst = cmake_config.build();
 
     // 设置库搜索路径和链接
-    let (lib_dir, lib_name) = find_library(&dst, &target);
+    // cmake 输出固定为 lib/ 目录
+    let lib_dir = dst.join("lib");
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
+
+    // 库名规则:
+    // - Windows MSVC 静态库: libxml2s (release) / libxml2sd (debug)
+    // - 其他平台: xml2 (无后缀)
+    let lib_name = if target.contains("windows") {
+        if cfg!(debug_assertions) {
+            "libxml2sd"
+        } else {
+            "libxml2s"
+        }
+    } else {
+        "xml2"
+    };
     println!("cargo:rustc-link-lib=static={}", lib_name);
 
     // 额外的系统库链接
@@ -140,13 +89,12 @@ fn main() {
         println!("cargo:rustc-link-lib=dl");
     }
 
-    // 生成 FFI 绑定
-    let include_dir = find_include_dir(&dst);
+    // 生成 FFI 绑定 - cmake 输出目录包含所有头文件（含生成的 xmlversion.h）
+    let include_dir = dst.join("include").join("libxml2");
 
     let bindings = bindgen::Builder::default()
         .header("wrapper.h")
         .clang_arg(format!("-I{}", include_dir.display()))
-        .clang_arg(format!("-I{}", libxml2_src.display()))
 
         // ========================================
         // HTML 解析函数
