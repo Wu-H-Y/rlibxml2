@@ -57,6 +57,11 @@ pub struct Document {
     _marker: PhantomData<*const ()>,
 }
 
+// SAFETY: libxml2 中独立解析的文档树是线程安全的（只要不并发修剪树节点或者在多线程调解析方法）。
+// 本库 API 仅对外暴露了不可变借用进行提取，因此它是 Send 和 Sync 的。
+unsafe impl Send for Document {}
+unsafe impl Sync for Document {}
+
 impl Document {
     /// 从 HTML 字符串解析文档
     ///

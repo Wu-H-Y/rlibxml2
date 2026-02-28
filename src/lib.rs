@@ -45,7 +45,8 @@
 //!
 //! let node = {
 //!     let doc = Document::parse("<div>test</div>").unwrap();
-//!     doc.select("//div").unwrap()[0].clone()
+//!     let node = doc.select("//div").unwrap()[0].clone();
+//!     node
 //!     // doc 在此处被 drop
 //! };
 //! node.text();  // 编译错误：`doc` 的生命周期不够长

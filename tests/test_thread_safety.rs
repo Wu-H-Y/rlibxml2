@@ -3,8 +3,8 @@
 //! 注意：libxml2 文档（Document）不是线程安全的，不能跨线程共享。
 //! 这些测试验证在多线程环境中，每个线程可以安全地创建和使用自己的文档。
 
-use std::thread;
 use rlibxml::Document;
+use std::thread;
 
 /// 测试多线程中每个线程创建自己的文档
 #[test]

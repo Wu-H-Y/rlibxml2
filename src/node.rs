@@ -43,6 +43,11 @@ pub struct SelectedNode<'a> {
     pub(crate) _marker: PhantomData<&'a ()>,
 }
 
+// SAFETY: SelectedNode 只是不可变的借用引用，底层的 xmlNodePtr 的实际所有者是线程安全的 Document。
+// 只要 Document 依然存活，跨线程传递借用是安全的。
+unsafe impl<'a> Send for SelectedNode<'a> {}
+unsafe impl<'a> Sync for SelectedNode<'a> {}
+
 // 手动实现 Clone，不要求 Document: Clone
 impl<'a> Clone for SelectedNode<'a> {
     fn clone(&self) -> Self {

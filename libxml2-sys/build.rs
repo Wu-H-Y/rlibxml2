@@ -86,16 +86,11 @@ fn main() {
     // 使用 cmake 编译极限精简版的 libxml2
     let mut cmake_config = cmake::Config::new(&libxml2_src);
 
-    // 核心功能：仅启用爬虫所需
     cmake_config
         .define("LIBXML2_WITH_TREE", "ON")
         .define("LIBXML2_WITH_HTML", "ON")
         .define("LIBXML2_WITH_XPATH", "ON")
-        .define("LIBXML2_WITH_THREADS", "ON")
-        .define("LIBXML2_WITH_OUTPUT", "ON")
-        .define("LIBXML2_WITH_READER", "ON")
-        .define("LIBXML2_WITH_WRITER", "ON")
-        .define("LIBXML2_WITH_PUSH", "ON");
+        .define("LIBXML2_WITH_THREADS", "ON");
 
     // 关键：关闭移动端极易报错的额外依赖
     cmake_config
@@ -157,94 +152,27 @@ fn main() {
         // HTML 解析函数
         // ========================================
         .allowlist_function("htmlReadMemory")
-        .allowlist_function("htmlReadDoc")
-        .allowlist_function("htmlFreeDoc")
 
         // ========================================
         // XML 文档函数
         // ========================================
         .allowlist_function("xmlFreeDoc")
         .allowlist_function("xmlNodeGetContent")
-        .allowlist_function("xmlNodeSetContent")
         .allowlist_function("xmlGetNodePath")
         .allowlist_function("xmlGetProp")
-        .allowlist_function("xmlNewProp")
-        .allowlist_function("xmlNewNode")
-        .allowlist_function("xmlAddChild")
         .allowlist_function("xmlDocGetRootElement")
-        .allowlist_function("xmlDocSetRootElement")
-        .allowlist_function("xmlNewDoc")
-        .allowlist_function("xmlSaveFile")
-        .allowlist_function("xmlSaveFormatFile")
         .allowlist_function("xmlReadMemory")
-        .allowlist_function("xmlReadDoc")
         .allowlist_function("xmlCleanupParser")
         .allowlist_function("xmlInitParser")
-        .allowlist_function("xmlMemorySetup")
-        .allowlist_function("xmlGetLastError")
-        .allowlist_function("xmlResetLastError")
-        .allowlist_function("xmlStrcmp")
-        .allowlist_function("xmlStrlen")
-        .allowlist_function("xmlStrdup")
 
         // ========================================
         // XPath 核心函数
         // ========================================
         .allowlist_function("xmlXPathNewContext")
         .allowlist_function("xmlXPathFreeContext")
-        .allowlist_function("xmlXPathEval")
         .allowlist_function("xmlXPathEvalExpression")
-        .allowlist_function("xmlXPathNodeEval")
-        .allowlist_function("xmlXPathEvalPredicate")
         .allowlist_function("xmlXPathFreeObject")
-        .allowlist_function("xmlXPathObjectCopy")
         .allowlist_function("xmlXPathSetContextNode")
-        .allowlist_function("xmlXPathOrderDocElems")
-
-        // ========================================
-        // XPath 编译表达式
-        // ========================================
-        .allowlist_function("xmlXPathCompile")
-        .allowlist_function("xmlXPathCtxtCompile")
-        .allowlist_function("xmlXPathCompiledEval")
-        .allowlist_function("xmlXPathCompiledEvalToBoolean")
-        .allowlist_function("xmlXPathFreeCompExpr")
-
-        // ========================================
-        // XPath NodeSet 操作
-        // ========================================
-        .allowlist_function("xmlXPathNodeSetCreate")
-        .allowlist_function("xmlXPathFreeNodeSet")
-        .allowlist_function("xmlXPathFreeNodeSetList")
-        .allowlist_function("xmlXPathCmpNodes")
-
-        // ========================================
-        // XPath 类型转换函数
-        // ========================================
-        .allowlist_function("xmlXPathCastNumberToBoolean")
-        .allowlist_function("xmlXPathCastStringToBoolean")
-        .allowlist_function("xmlXPathCastNodeSetToBoolean")
-        .allowlist_function("xmlXPathCastToBoolean")
-        .allowlist_function("xmlXPathCastBooleanToNumber")
-        .allowlist_function("xmlXPathCastStringToNumber")
-        .allowlist_function("xmlXPathCastNodeToNumber")
-        .allowlist_function("xmlXPathCastNodeSetToNumber")
-        .allowlist_function("xmlXPathCastToNumber")
-        .allowlist_function("xmlXPathCastBooleanToString")
-        .allowlist_function("xmlXPathCastNumberToString")
-        .allowlist_function("xmlXPathCastNodeToString")
-        .allowlist_function("xmlXPathCastNodeSetToString")
-        .allowlist_function("xmlXPathCastToString")
-        .allowlist_function("xmlXPathConvertBoolean")
-        .allowlist_function("xmlXPathConvertNumber")
-        .allowlist_function("xmlXPathConvertString")
-
-        // ========================================
-        // XPath 工具函数
-        // ========================================
-        .allowlist_function("xmlXPathIsNaN")
-        .allowlist_function("xmlXPathIsInf")
-        .allowlist_function("xmlXPathContextSetCache")
 
         // ========================================
         // 核心类型
@@ -256,37 +184,16 @@ fn main() {
         .allowlist_type("xmlDtd")
         .allowlist_type("xmlDict")
         .allowlist_type("xmlError")
-
-        // ========================================
-        // XPath 类型
-        // ========================================
         .allowlist_type("xmlXPathContext")
         .allowlist_type("xmlXPathObject")
         .allowlist_type("xmlXPathObjectPtr")
         .allowlist_type("xmlNodeSet")
         .allowlist_type("xmlNodeSetPtr")
-        .allowlist_type("xmlXPathParserContext")
-        .allowlist_type("xmlXPathCompExpr")
-        .allowlist_type("xmlXPathType")
-        .allowlist_type("xmlXPathVariable")
-        .allowlist_type("xmlXPathFunct")
-        .allowlist_type("xmlXPathAxis")
-        .allowlist_type("xmlXPathObjectType")
-        .allowlist_type("xmlXPathError")
-        .allowlist_type("xmlXPathConvertFunc")
-        .allowlist_type("xmlXPathEvalFunc")
-        .allowlist_type("xmlXPathAxisFunc")
-        .allowlist_type("xmlXPathFunction")
-        .allowlist_type("xmlXPathVariableLookupFunc")
-        .allowlist_type("xmlXPathFuncLookupFunc")
-        .allowlist_type("xmlHashTable")
-
-        // ========================================
-        // 解析器类型
-        // ========================================
         .allowlist_type("htmlParserOption")
         .allowlist_type("xmlParserOption")
         .allowlist_type("xmlElementType")
+        .allowlist_type("xmlXPathVariable")
+        .allowlist_type("xmlXPathFunct")
 
         // ========================================
         // 枚举值
@@ -304,9 +211,6 @@ fn main() {
         .allowlist_var("xmlFree")
         .allowlist_var("xmlMalloc")
         .allowlist_var("xmlRealloc")
-        .allowlist_var("xmlXPathNAN")
-        .allowlist_var("xmlXPathPINF")
-        .allowlist_var("xmlXPathNINF")
 
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
