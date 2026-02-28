@@ -190,9 +190,8 @@ pub(crate) fn evaluate_xpath_on_node<'a>(
     // SAFETY: node_ptr 是有效的节点指针，c_xpath 是有效的 CString
     // 使用 libxml2-sys 提供的安全封装
     unsafe {
-        let raw_result =
-            xpath_evaluate_on_node(node_ptr, c_xpath.as_ptr() as *const xmlChar)
-                .ok_or_else(|| Error::invalid_xpath(xpath))?;
+        let raw_result = xpath_evaluate_on_node(node_ptr, c_xpath.as_ptr() as *const xmlChar)
+            .ok_or_else(|| Error::invalid_xpath(xpath))?;
 
         if raw_result.result_type == XPATH_NODESET {
             let node_ptrs = raw_result.as_nodeset();

@@ -5,6 +5,7 @@
 
 use crate::{free_xml_char, xmlDocPtr, xmlNodePtr, xmlXPathContext, xmlXPathObject};
 use std::ffi::CStr;
+use std::os::raw::c_char;
 use std::ptr;
 
 // ========================================
@@ -295,21 +296,9 @@ pub unsafe fn attr_get_name(attr: *mut xmlAttr) -> *const crate::xmlChar {
 /// - `size` 必须是 HTML 内容的实际长度
 /// - `options` 必须是有效的解析选项组合
 #[inline]
-pub unsafe fn parse_html_memory(
-    html: *const i8,
-    size: i32,
-    options: i32,
-) -> xmlDocPtr {
+pub unsafe fn parse_html_memory(html: *const c_char, size: i32, options: i32) -> xmlDocPtr {
     // SAFETY: 调用者保证参数有效
-    unsafe {
-        crate::htmlReadMemory(
-            html,
-            size,
-            ptr::null(),
-            c"UTF-8".as_ptr(),
-            options,
-        )
-    }
+    unsafe { crate::htmlReadMemory(html, size, ptr::null(), c"UTF-8".as_ptr(), options) }
 }
 
 /// 从内存解析 XML 文档
@@ -320,21 +309,9 @@ pub unsafe fn parse_html_memory(
 /// - `size` 必须是 XML 内容的实际长度
 /// - `options` 必须是有效的解析选项组合
 #[inline]
-pub unsafe fn parse_xml_memory(
-    xml: *const i8,
-    size: i32,
-    options: i32,
-) -> xmlDocPtr {
+pub unsafe fn parse_xml_memory(xml: *const c_char, size: i32, options: i32) -> xmlDocPtr {
     // SAFETY: 调用者保证参数有效
-    unsafe {
-        crate::xmlReadMemory(
-            xml,
-            size,
-            ptr::null(),
-            ptr::null(),
-            options,
-        )
-    }
+    unsafe { crate::xmlReadMemory(xml, size, ptr::null(), ptr::null(), options) }
 }
 
 // ========================================
@@ -367,7 +344,10 @@ impl RawXPathResult {
     pub unsafe fn new(object: *mut xmlXPathObject) -> Self {
         // SAFETY: 调用者保证 object 有效
         let result_type = unsafe { (*object).type_ as i32 };
-        Self { object, result_type }
+        Self {
+            object,
+            result_type,
+        }
     }
 
     /// 提取布尔值
@@ -512,7 +492,10 @@ impl Drop for XPathContextGuard {
 ///
 /// - `doc` 必须是有效的文档指针
 /// - `xpath` 必须是有效的以 null 结尾的 C 字符串
-pub unsafe fn xpath_evaluate(doc: xmlDocPtr, xpath: *const crate::xmlChar) -> Option<RawXPathResult> {
+pub unsafe fn xpath_evaluate(
+    doc: xmlDocPtr,
+    xpath: *const crate::xmlChar,
+) -> Option<RawXPathResult> {
     // SAFETY: 调用者保证参数有效
     let mut ctx = unsafe { XPathContextGuard::new(doc)? };
     unsafe { ctx.evaluate(xpath) }
@@ -524,7 +507,10 @@ pub unsafe fn xpath_evaluate(doc: xmlDocPtr, xpath: *const crate::xmlChar) -> Op
 ///
 /// - `node` 必须是有效的节点指针
 /// - `xpath` 必须是有效的以 null 结尾的 C 字符串
-pub unsafe fn xpath_evaluate_on_node(node: xmlNodePtr, xpath: *const crate::xmlChar) -> Option<RawXPathResult> {
+pub unsafe fn xpath_evaluate_on_node(
+    node: xmlNodePtr,
+    xpath: *const crate::xmlChar,
+) -> Option<RawXPathResult> {
     // SAFETY: 调用者保证参数有效
     let doc = unsafe { node_get_document(node) };
     if doc.is_null() {

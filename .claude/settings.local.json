@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo build)",
+      "mcp__fetch__fetch",
+      "Bash(cargo build:*)",
+      "Bash(cat:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo fmt:*)",
+      "Skill(rust-skills:rust-symbol-analyzer)"
+    ]
+  }
+}

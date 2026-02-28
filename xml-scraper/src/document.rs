@@ -140,9 +140,8 @@ impl Document {
 
         // SAFETY: c_html 是有效的 CString，size 已验证
         // 调用 libxml2-sys 的安全封装函数
-        let doc_ptr = unsafe {
-            parse_html_memory(c_html.as_ptr(), size as i32, raw_options as i32)
-        };
+        let doc_ptr =
+            unsafe { parse_html_memory(c_html.as_ptr(), size as i32, raw_options as i32) };
 
         if doc_ptr.is_null() {
             return Err(Error::ParseFailed { detail: None });
@@ -201,9 +200,7 @@ impl Document {
 
         // SAFETY: c_xml 是有效的 CString，size 已验证
         // 调用 libxml2-sys 的安全封装函数
-        let doc_ptr = unsafe {
-            parse_xml_memory(c_xml.as_ptr(), size as i32, raw_options as i32)
-        };
+        let doc_ptr = unsafe { parse_xml_memory(c_xml.as_ptr(), size as i32, raw_options as i32) };
 
         if doc_ptr.is_null() {
             return Err(Error::ParseFailed { detail: None });
