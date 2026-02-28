@@ -1,5 +1,5 @@
 [workspace]
-members = ["libxml2-sys", "xml-scraper"]
+members = ["libxml2-sys"]
 resolver = "2"
 
 [workspace.package]
@@ -7,4 +7,21 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/Wu-H-Y/rlibxml2"
-description = "Safe Rust bindings for libxml2, optimized for web scraping"
+description = "Safe Rust bindings for libxml2"
+
+[workspace.dependencies]
+libxml2-sys = { path = "libxml2-sys" }
+thiserror = "2"
+libc = "0.2"
+
+[package]
+name = "rlibxml"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Safe Rust bindings for libxml2 - HTML/XML parsing and XPath queries"
+
+[dependencies]
+libxml2-sys.workspace = true
+thiserror.workspace = true

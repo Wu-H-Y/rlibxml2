@@ -4,11 +4,11 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Raw FFI bindings to libxml2 for web scraping"
+description = "Raw FFI bindings to libxml2"
 links = "xml2"
 
 [dependencies]
-libc = "0.2"
+libc.workspace = true
 
 [build-dependencies]
 cmake = "0.1"

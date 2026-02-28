@@ -17,13 +17,13 @@
 
 ```toml
 [dependencies]
-xml-scraper = "0.1"
+rlibxml = "0.1"
 ```
 
 ## 快速开始
 
 ```rust
-use xml_scraper::Document;
+use rlibxml::Document;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let html = r#"
@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 节点引用的生命周期绑定到所属的文档，Rust 编译器会在编译时阻止悬垂引用：
 
 ```rust,compile_fail
-use xml_scraper::Document;
+use rlibxml::Document;
 
 let node = {
     let doc = Document::parse("<div>test</div>").unwrap();
@@ -94,7 +94,7 @@ assert_eq!(items, vec!["Item 1", "Item 2"]);
 ## 自定义解析选项
 
 ```rust
-use xml_scraper::{Document, ParseOptions};
+use rlibxml::{Document, ParseOptions};
 
 let options = ParseOptions {
     recover: true,      // 容错模式
@@ -111,7 +111,7 @@ let doc = Document::parse_html_with_options(html, options)?;
 支持完整的 XPath 1.0 语法：
 
 ```rust
-use xml_scraper::{Document, XPathResult};
+use rlibxml::{Document, XPathResult};
 
 let doc = Document::parse("<div><p>A</p><p>B</p></div>")?;
 
@@ -137,7 +137,7 @@ if let XPathResult::Number(n) = result {
 ## 节点遍历
 
 ```rust
-use xml_scraper::Document;
+use rlibxml::Document;
 
 let doc = Document::parse("<div><p>A</p><p>B</p></div>")?;
 let div = &doc.select("//div")?[0];
@@ -206,7 +206,7 @@ cargo build --target aarch64-apple-ios-sim --release
 
 ```
 rlibxml2/
-├── Cargo.toml              # 工作区配置
+├── Cargo.toml              # workspace + rlibxml package
 ├── libxml2-sys/            # 底层 FFI 绑定
 │   ├── Cargo.toml
 │   ├── build.rs            # CMake 构建脚本
@@ -215,17 +215,15 @@ rlibxml2/
 │   │   ├── lib.rs          # 原始 FFI 导出
 │   │   └── safe_wrapper.rs # 安全封装层
 │   └── libxml2_src/        # libxml2 C 源码 (submodule)
-└── xml-scraper/            # 安全 Rust 封装
-    ├── Cargo.toml
-    ├── src/
-    │   ├── lib.rs          # 主要 API 导出
-    │   ├── document.rs     # 文档解析
-    │   ├── node.rs         # 节点操作
-    │   ├── xpath.rs        # XPath 查询
-    │   ├── options.rs      # 解析选项
-    │   ├── node_type.rs    # 节点类型
-    │   └── error.rs        # 错误类型
-    └── tests/              # 测试用例
+├── src/                    # rlibxml 安全实现
+│   ├── lib.rs              # 主要 API 导出
+│   ├── document.rs         # 文档解析
+│   ├── node.rs             # 节点操作
+│   ├── xpath.rs            # XPath 查询
+│   ├── options.rs          # 解析选项
+│   ├── node_type.rs        # 节点类型
+│   └── error.rs            # 错误类型
+└── tests/                  # 测试用例
 ```
 
 ## License

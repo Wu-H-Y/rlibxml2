@@ -1,7 +1,7 @@
 //! libxml2-sys - libxml2 的原始 FFI 绑定
 //!
 //! 这个 crate 提供了对 libxml2 库的 unsafe 原始绑定。
-//! 如果你想使用安全的 API，请使用 `xml-scraper` crate。
+//! 如果你想使用安全的 API，请使用 `rlibxml` crate。
 
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
