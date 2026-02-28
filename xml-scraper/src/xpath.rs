@@ -160,7 +160,7 @@ unsafe fn ptr_to_string(ptr: *const i8) -> String {
         return String::new();
     }
     // SAFETY: 调用者保证 ptr 是有效的 C 字符串
-    unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() }
+    unsafe { CStr::from_ptr(ptr.cast()).to_string_lossy().into_owned() }
 }
 
 /// 创建 XPath 上下文并执行查询
@@ -231,7 +231,8 @@ pub(crate) fn evaluate_xpath<'a>(doc_ptr: xmlDocPtr, xpath: &str) -> Result<XPat
     unsafe {
         let (ctx, xpath_obj) = create_xpath_context(doc_ptr, &c_xpath)?;
 
-        let result_type = (*xpath_obj).type_;
+        // 注意：bindgen 在不同平台生成的 type_ 类型可能不同（u32 或 i32）
+        let result_type = (*xpath_obj).type_ as i32;
         let result = match result_type {
             XPATH_NODESET => {
                 let nodes = extract_nodeset(xpath_obj);
