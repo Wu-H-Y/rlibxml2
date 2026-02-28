@@ -2,8 +2,9 @@
 //!
 //! 提供对 XML/HTML DOM 节点的安全访问。
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::node_type::NodeType;
+use crate::xpath::evaluate_xpath_on_node;
 use libxml2_sys::*;
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -101,6 +102,7 @@ impl<'a> SelectedNode<'a> {
     /// ```
     pub fn text(&self) -> String {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { node_get_content(self.node_ptr) }
     }
 
@@ -117,6 +119,7 @@ impl<'a> SelectedNode<'a> {
     /// ```
     pub fn tag_name(&self) -> String {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { node_get_name(self.node_ptr) }
     }
 
@@ -135,6 +138,7 @@ impl<'a> SelectedNode<'a> {
     /// ```
     pub fn path(&self) -> String {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { node_get_path(self.node_ptr) }
     }
 
@@ -154,6 +158,7 @@ impl<'a> SelectedNode<'a> {
     /// ```
     pub fn node_type(&self) -> NodeType {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         let type_val = unsafe { node_get_type(self.node_ptr) };
         NodeType::from_raw(type_val)
     }
@@ -184,6 +189,7 @@ impl<'a> SelectedNode<'a> {
 
         let c_name = CString::new(name).ok()?;
         // SAFETY: node_ptr 和 c_name 都有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { node_get_attribute(self.node_ptr, c_name.as_ptr().cast()) }
     }
 
@@ -203,33 +209,10 @@ impl<'a> SelectedNode<'a> {
     /// assert_eq!(attrs.get("id"), Some(&"main".to_string()));
     /// ```
     pub fn attrs(&self) -> HashMap<String, String> {
-        let mut result = HashMap::new();
-
         // SAFETY: node_ptr 在节点存活期间始终有效
-        unsafe {
-            let mut attr = node_get_first_attribute(self.node_ptr);
-            while !attr.is_null() {
-                let name_ptr = attr_get_name(attr);
-                if !name_ptr.is_null() {
-                    let name = std::ffi::CStr::from_ptr(name_ptr.cast())
-                        .to_string_lossy()
-                        .into_owned();
-
-                    // 获取属性值
-                    let value_ptr = xmlGetProp(self.node_ptr, name_ptr);
-                    if !value_ptr.is_null() {
-                        let value = std::ffi::CStr::from_ptr(value_ptr.cast())
-                            .to_string_lossy()
-                            .into_owned();
-                        result.insert(name, value);
-                        free_xml_char(value_ptr);
-                    }
-                }
-                attr = attr_get_next(attr);
-            }
-        }
-
-        result
+        // 使用 libxml2-sys 提供的安全封装函数
+        let attrs_vec = unsafe { node_get_all_attributes(self.node_ptr) };
+        attrs_vec.into_iter().collect()
     }
 
     /// 检查是否具有指定属性
@@ -255,14 +238,8 @@ impl<'a> SelectedNode<'a> {
         };
 
         // SAFETY: node_ptr 和 c_name 都有效
-        unsafe {
-            let prop = xmlGetProp(self.node_ptr, c_name.as_ptr().cast());
-            if prop.is_null() {
-                return false;
-            }
-            free_xml_char(prop);
-            true
-        }
+        // 使用 libxml2-sys 提供的安全封装函数
+        unsafe { node_has_attribute(self.node_ptr, c_name.as_ptr().cast()) }
     }
 
     // ========================================
@@ -283,12 +260,14 @@ impl<'a> SelectedNode<'a> {
     /// ```
     pub fn first_child(&self) -> Option<SelectedNode<'a>> {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { Self::from_raw_option(node_get_first_child(self.node_ptr)) }
     }
 
     /// 获取最后一个子节点
     pub fn last_child(&self) -> Option<SelectedNode<'a>> {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { Self::from_raw_option(node_get_last_child(self.node_ptr)) }
     }
 
@@ -308,6 +287,7 @@ impl<'a> SelectedNode<'a> {
         let mut result = Vec::new();
 
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe {
             let mut child = node_get_first_child(self.node_ptr);
             while !child.is_null() {
@@ -361,6 +341,7 @@ impl<'a> SelectedNode<'a> {
     /// ```
     pub fn parent(&self) -> Option<SelectedNode<'a>> {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { Self::from_raw_option(node_get_parent(self.node_ptr)) }
     }
 
@@ -378,12 +359,14 @@ impl<'a> SelectedNode<'a> {
     /// ```
     pub fn next_sibling(&self) -> Option<SelectedNode<'a>> {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { Self::from_raw_option(node_get_next_sibling(self.node_ptr)) }
     }
 
     /// 获取上一个兄弟节点
     pub fn prev_sibling(&self) -> Option<SelectedNode<'a>> {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { Self::from_raw_option(node_get_prev_sibling(self.node_ptr)) }
     }
 
@@ -392,6 +375,7 @@ impl<'a> SelectedNode<'a> {
         let mut result = Vec::new();
 
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         // 向前遍历
         unsafe {
             let mut prev = node_get_prev_sibling(self.node_ptr);
@@ -418,12 +402,14 @@ impl<'a> SelectedNode<'a> {
     /// 检查节点是否有子节点
     pub fn has_children(&self) -> bool {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { node_has_children(self.node_ptr) }
     }
 
     /// 检查节点是否有父节点
     pub fn has_parent(&self) -> bool {
         // SAFETY: node_ptr 在节点存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe { node_has_parent(self.node_ptr) }
     }
 
@@ -497,63 +483,8 @@ impl<'a> SelectedNode<'a> {
     /// assert_eq!(paragraphs.len(), 2);
     /// ```
     pub fn select(&self, xpath: &str) -> Result<Vec<SelectedNode<'a>>> {
-        let c_xpath = CString::new(xpath).map_err(|_| Error::NullByte)?;
-
-        // SAFETY: node_ptr 在节点存活期间始终有效
-        unsafe {
-            // 从节点获取文档指针
-            let doc_ptr = node_get_document(self.node_ptr);
-            if doc_ptr.is_null() {
-                return Err(Error::XPathContextFailed);
-            }
-
-            let ctx = xmlXPathNewContext(doc_ptr);
-            if ctx.is_null() {
-                return Err(Error::XPathContextFailed);
-            }
-
-            // 设置上下文节点
-            if xmlXPathSetContextNode(self.node_ptr, ctx) != 0 {
-                xmlXPathFreeContext(ctx);
-                return Err(Error::XPathContextFailed);
-            }
-
-            let xpath_obj = xmlXPathEvalExpression(c_xpath.as_ptr() as *const xmlChar, ctx);
-
-            if xpath_obj.is_null() {
-                xmlXPathFreeContext(ctx);
-                return Err(Error::InvalidXPath {
-                    xpath: xpath.to_string(),
-                    reason: None,
-                });
-            }
-
-            let result_type = (*xpath_obj).type_;
-            let result = if result_type == 1 {
-                // XPATH_NODESET
-                let mut nodes = Vec::new();
-                let nodeset = (*xpath_obj).nodesetval;
-                if !nodeset.is_null() && (*nodeset).nodeNr > 0 {
-                    let node_count = (*nodeset).nodeNr as isize;
-                    let node_tab = (*nodeset).nodeTab;
-
-                    for i in 0..node_count {
-                        let node = *node_tab.offset(i);
-                        if !node.is_null() {
-                            nodes.push(Self::from_raw(node));
-                        }
-                    }
-                }
-                nodes
-            } else {
-                Vec::new()
-            };
-
-            xmlXPathFreeObject(xpath_obj);
-            xmlXPathFreeContext(ctx);
-
-            Ok(result)
-        }
+        // 使用 libxml2-sys 提供的安全封装
+        evaluate_xpath_on_node(self.node_ptr, xpath)
     }
 
     /// 获取原始节点指针（用于高级用途）

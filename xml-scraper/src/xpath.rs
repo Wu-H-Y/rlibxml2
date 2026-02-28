@@ -3,7 +3,7 @@
 use crate::error::{Error, Result};
 use crate::node::SelectedNode;
 use libxml2_sys::*;
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 
 /// XPath 查询结果
 ///
@@ -49,7 +49,7 @@ pub enum XPathResult<'a> {
     /// 数字（浮点数）
     Number(f64),
     /// 字符串
-    String(String),
+    String(std::string::String),
     /// 空结果或未知类型
     Empty,
 }
@@ -122,138 +122,87 @@ impl<'a> XPathResult<'a> {
     }
 
     /// 获取字符串值，如果类型不匹配则进行转换
-    pub fn as_string(&self) -> String {
+    pub fn as_string(&self) -> std::string::String {
         match self {
             XPathResult::String(s) => s.clone(),
             XPathResult::Number(n) => n.to_string(),
             XPathResult::Boolean(b) => b.to_string(),
             XPathResult::NodeSet(nodes) => {
                 if nodes.is_empty() {
-                    String::new()
+                    std::string::String::new()
                 } else {
                     nodes[0].text()
                 }
             }
-            XPathResult::Empty => String::new(),
+            XPathResult::Empty => std::string::String::new(),
         }
     }
-}
-
-/// XPath 查询类型常量
-pub(crate) const XPATH_NODESET: i32 = 1;
-pub(crate) const XPATH_BOOLEAN: i32 = 2;
-pub(crate) const XPATH_NUMBER: i32 = 3;
-pub(crate) const XPATH_STRING: i32 = 4;
-
-// ========================================
-// 私有 unsafe helper 函数
-// ========================================
-
-/// 将 C 字符串指针安全地转换为 String
-///
-/// # Safety
-///
-/// `ptr` 必须是有效的以 null 结尾的 C 字符串指针，或者为 null
-#[inline]
-unsafe fn ptr_to_string(ptr: *const i8) -> String {
-    if ptr.is_null() {
-        return String::new();
-    }
-    // SAFETY: 调用者保证 ptr 是有效的 C 字符串
-    unsafe { CStr::from_ptr(ptr.cast()).to_string_lossy().into_owned() }
-}
-
-/// 创建 XPath 上下文并执行查询
-///
-/// # Safety
-///
-/// - `doc_ptr` 必须是有效的文档指针
-/// - `c_xpath` 必须是有效的以 null 结尾的 C 字符串
-unsafe fn create_xpath_context(
-    doc_ptr: xmlDocPtr,
-    c_xpath: &CString,
-) -> Result<(*mut xmlXPathContext, *mut xmlXPathObject)> {
-    // SAFETY: 调用者保证 doc_ptr 是有效的
-    let ctx = unsafe { xmlXPathNewContext(doc_ptr) };
-    if ctx.is_null() {
-        return Err(Error::XPathContextFailed);
-    }
-
-    // SAFETY: c_xpath 是有效的 CString
-    let xpath_obj = unsafe { xmlXPathEvalExpression(c_xpath.as_ptr() as *const xmlChar, ctx) };
-
-    if xpath_obj.is_null() {
-        unsafe { xmlXPathFreeContext(ctx) };
-        return Err(Error::invalid_xpath(c_xpath.to_str().unwrap_or("")));
-    }
-
-    Ok((ctx, xpath_obj))
-}
-
-/// 从 XPath 结果对象中提取节点集合
-///
-/// # Safety
-///
-/// `xpath_obj` 必须是有效的 XPath 对象指针，且类型为 XPATH_NODESET
-unsafe fn extract_nodeset(xpath_obj: *mut xmlXPathObject) -> Vec<SelectedNode<'static>> {
-    let mut nodes = Vec::new();
-
-    // SAFETY: 调用者保证 xpath_obj 是有效的
-    let nodeset = unsafe { (*xpath_obj).nodesetval };
-    if !nodeset.is_null() && unsafe { (*nodeset).nodeNr } > 0 {
-        let node_count = unsafe { (*nodeset).nodeNr } as isize;
-        let node_tab = unsafe { (*nodeset).nodeTab };
-
-        for i in 0..node_count {
-            // SAFETY: node_tab 是有效的数组，node_count 是其长度
-            let node = unsafe { *node_tab.offset(i) };
-            if !node.is_null() {
-                // SAFETY: node 是有效的节点指针
-                nodes.push(unsafe { SelectedNode::from_raw(node) });
-            }
-        }
-    }
-
-    nodes
 }
 
 /// 执行 XPath 查询的内部实现
 ///
-/// 此函数封装了所有 unsafe 操作，对外暴露安全接口。
+/// 此函数使用 libxml2-sys 提供的安全封装，对外暴露安全接口。
 ///
-/// # Safety
+/// # Arguments
 ///
-/// - `doc_ptr` 必须是有效的文档指针
+/// * `doc_ptr` - 有效的文档指针
+/// * `xpath` - XPath 表达式字符串
 pub(crate) fn evaluate_xpath<'a>(doc_ptr: xmlDocPtr, xpath: &str) -> Result<XPathResult<'a>> {
     let c_xpath = CString::new(xpath).map_err(|_| Error::NullByte)?;
 
-    // SAFETY: doc_ptr 必须是有效的文档指针，c_xpath 是有效的 CString
+    // SAFETY: doc_ptr 是有效的文档指针，c_xpath 是有效的 CString
+    // 使用 libxml2-sys 提供的安全封装
     unsafe {
-        let (ctx, xpath_obj) = create_xpath_context(doc_ptr, &c_xpath)?;
+        let raw_result = xpath_evaluate(doc_ptr, c_xpath.as_ptr() as *const xmlChar)
+            .ok_or_else(|| Error::invalid_xpath(xpath))?;
 
-        // 注意：bindgen 在不同平台生成的 type_ 类型可能不同（u32 或 i32）
-        let result_type = (*xpath_obj).type_ as i32;
-        let result = match result_type {
+        let result = match raw_result.result_type {
             XPATH_NODESET => {
-                let nodes = extract_nodeset(xpath_obj);
+                let node_ptrs = raw_result.as_nodeset();
+                let nodes = node_ptrs
+                    .into_iter()
+                    .map(|ptr| SelectedNode::from_raw(ptr))
+                    .collect();
                 XPathResult::NodeSet(nodes)
             }
-            XPATH_BOOLEAN => XPathResult::Boolean((*xpath_obj).boolval != 0),
-            XPATH_NUMBER => XPathResult::Number((*xpath_obj).floatval),
-            XPATH_STRING => {
-                let stringval = (*xpath_obj).stringval;
-                if stringval.is_null() {
-                    XPathResult::String(String::new())
-                } else {
-                    XPathResult::String(ptr_to_string(stringval.cast()))
-                }
-            }
+            XPATH_BOOLEAN => XPathResult::Boolean(raw_result.as_boolean()),
+            XPATH_NUMBER => XPathResult::Number(raw_result.as_number()),
+            XPATH_STRING => XPathResult::String(raw_result.as_string()),
             _ => XPathResult::Empty,
         };
 
-        xmlXPathFreeObject(xpath_obj);
-        xmlXPathFreeContext(ctx);
-
         Ok(result)
+    }
+}
+
+/// 在节点上下文中执行 XPath 查询
+///
+/// # Arguments
+///
+/// * `node_ptr` - 有效的节点指针
+/// * `xpath` - XPath 表达式字符串
+pub(crate) fn evaluate_xpath_on_node<'a>(
+    node_ptr: xmlNodePtr,
+    xpath: &str,
+) -> Result<Vec<SelectedNode<'a>>> {
+    let c_xpath = CString::new(xpath).map_err(|_| Error::NullByte)?;
+
+    // SAFETY: node_ptr 是有效的节点指针，c_xpath 是有效的 CString
+    // 使用 libxml2-sys 提供的安全封装
+    unsafe {
+        let raw_result =
+            xpath_evaluate_on_node(node_ptr, c_xpath.as_ptr() as *const xmlChar)
+                .ok_or_else(|| Error::invalid_xpath(xpath))?;
+
+        if raw_result.result_type == XPATH_NODESET {
+            let node_ptrs = raw_result.as_nodeset();
+            let nodes = node_ptrs
+                .into_iter()
+                .map(|ptr| SelectedNode::from_raw(ptr))
+                .collect();
+            Ok(nodes)
+        } else {
+            Ok(Vec::new())
+        }
     }
 }

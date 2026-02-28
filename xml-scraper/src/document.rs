@@ -123,33 +123,25 @@ impl Document {
 
         let c_html = CString::new(html).map_err(|_| Error::NullByte)?;
 
-        // SAFETY: c_html 是有效的 CString，size 已经验证
+        // 构建 HTML 解析选项
+        let mut raw_options: htmlParserOption = 0;
+        if options.recover {
+            raw_options |= htmlParserOption_HTML_PARSE_RECOVER;
+        }
+        if options.no_error {
+            raw_options |= htmlParserOption_HTML_PARSE_NOERROR;
+        }
+        if options.no_warning {
+            raw_options |= htmlParserOption_HTML_PARSE_NOWARNING;
+        }
+        if options.no_blanks {
+            raw_options |= htmlParserOption_HTML_PARSE_NOBLANKS;
+        }
+
+        // SAFETY: c_html 是有效的 CString，size 已验证
+        // 调用 libxml2-sys 的安全封装函数
         let doc_ptr = unsafe {
-            // 使用 bindgen 生成的 htmlParserOption 类型别名进行位运算
-            let mut raw_options: htmlParserOption = 0;
-
-            if options.recover {
-                raw_options |= htmlParserOption_HTML_PARSE_RECOVER;
-            }
-            if options.no_error {
-                raw_options |= htmlParserOption_HTML_PARSE_NOERROR;
-            }
-            if options.no_warning {
-                raw_options |= htmlParserOption_HTML_PARSE_NOWARNING;
-            }
-            if options.no_blanks {
-                raw_options |= htmlParserOption_HTML_PARSE_NOBLANKS;
-            }
-
-            // htmlReadMemory 的 options 参数类型是 c_int (i32)
-            // 需要显式转换以兼容所有平台
-            htmlReadMemory(
-                c_html.as_ptr(),
-                size as i32,
-                ptr::null(),
-                c"UTF-8".as_ptr(),
-                raw_options as i32,
-            )
+            parse_html_memory(c_html.as_ptr(), size as i32, raw_options as i32)
         };
 
         if doc_ptr.is_null() {
@@ -198,24 +190,19 @@ impl Document {
 
         let c_xml = CString::new(xml).map_err(|_| Error::NullByte)?;
 
-        // SAFETY: c_xml 是有效的 CString，size 已经验证
+        // 构建 XML 解析选项
+        let mut raw_options: xmlParserOption = 0;
+        if options.no_blanks {
+            raw_options |= xmlParserOption_XML_PARSE_NOBLANKS;
+        }
+        if options.no_dtd {
+            raw_options |= xmlParserOption_XML_PARSE_DTDLOAD;
+        }
+
+        // SAFETY: c_xml 是有效的 CString，size 已验证
+        // 调用 libxml2-sys 的安全封装函数
         let doc_ptr = unsafe {
-            let mut raw_options: xmlParserOption = 0;
-
-            if options.no_blanks {
-                raw_options |= xmlParserOption_XML_PARSE_NOBLANKS;
-            }
-            if options.no_dtd {
-                raw_options |= xmlParserOption_XML_PARSE_DTDLOAD;
-            }
-
-            xmlReadMemory(
-                c_xml.as_ptr(),
-                size as i32,
-                ptr::null(),
-                ptr::null(),
-                raw_options as i32,
-            )
+            parse_xml_memory(c_xml.as_ptr(), size as i32, raw_options as i32)
         };
 
         if doc_ptr.is_null() {
@@ -429,6 +416,7 @@ impl Document {
     /// ```
     pub fn root(&self) -> Option<SelectedNode<'_>> {
         // SAFETY: doc_ptr 在 Document 存活期间始终有效
+        // 使用 libxml2-sys 提供的安全封装函数
         let root = unsafe { doc_get_root_element(self.doc_ptr) };
         if root.is_null() {
             None
@@ -458,6 +446,7 @@ impl Document {
 impl Drop for Document {
     fn drop(&mut self) {
         // SAFETY: doc_ptr 在 drop 时仍然有效
+        // 使用 libxml2-sys 提供的安全封装函数
         unsafe {
             doc_free(self.doc_ptr);
             self.doc_ptr = ptr::null_mut();
