@@ -167,6 +167,7 @@ fn main() {
         .allowlist_function("xmlNodeGetContent")
         .allowlist_function("xmlNodeSetContent")
         .allowlist_function("xmlGetNodePath")
+        .allowlist_function("xmlGetProp")
         .allowlist_function("xmlNewProp")
         .allowlist_function("xmlNewNode")
         .allowlist_function("xmlAddChild")

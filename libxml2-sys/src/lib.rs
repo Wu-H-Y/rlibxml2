@@ -10,6 +10,10 @@
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
+// 安全封装模块
+mod safe_wrapper;
+pub use safe_wrapper::*;
+
 // ========================================
 // 指针类型别名
 // ========================================
