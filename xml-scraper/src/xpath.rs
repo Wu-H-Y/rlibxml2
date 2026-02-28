@@ -180,8 +180,7 @@ unsafe fn create_xpath_context(
     }
 
     // SAFETY: c_xpath 是有效的 CString
-    let xpath_obj =
-        unsafe { xmlXPathEvalExpression(c_xpath.as_ptr() as *const xmlChar, ctx) };
+    let xpath_obj = unsafe { xmlXPathEvalExpression(c_xpath.as_ptr() as *const xmlChar, ctx) };
 
     if xpath_obj.is_null() {
         unsafe { xmlXPathFreeContext(ctx) };

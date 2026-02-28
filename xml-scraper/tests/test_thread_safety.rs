@@ -90,7 +90,12 @@ fn test_concurrent_xpath_types() {
     // 线程 1：节点集合查询
     handles.push(thread::spawn(|| {
         for i in 0..100 {
-            let html = format!("<data><num>{}</num><num>{}</num><num>{}</num></data>", i, i + 1, i + 2);
+            let html = format!(
+                "<data><num>{}</num><num>{}</num><num>{}</num></data>",
+                i,
+                i + 1,
+                i + 2
+            );
             let doc = Document::parse(&html).unwrap();
             let nodes = doc.select("//num").unwrap();
             assert_eq!(nodes.len(), 3);
@@ -100,7 +105,12 @@ fn test_concurrent_xpath_types() {
     // 线程 2：数字查询
     handles.push(thread::spawn(|| {
         for i in 0..100 {
-            let html = format!("<data><num>{}</num><num>{}</num><num>{}</num></data>", i, i + 1, i + 2);
+            let html = format!(
+                "<data><num>{}</num><num>{}</num><num>{}</num></data>",
+                i,
+                i + 1,
+                i + 2
+            );
             let doc = Document::parse(&html).unwrap();
             let count = doc.extract_number("count(//num)").unwrap();
             assert_eq!(count, 3.0);
@@ -110,7 +120,12 @@ fn test_concurrent_xpath_types() {
     // 线程 3：布尔查询
     handles.push(thread::spawn(|| {
         for i in 0..100 {
-            let html = format!("<data><num>{}</num><num>{}</num><num>{}</num></data>", i, i + 1, i + 2);
+            let html = format!(
+                "<data><num>{}</num><num>{}</num><num>{}</num></data>",
+                i,
+                i + 1,
+                i + 2
+            );
             let doc = Document::parse(&html).unwrap();
             let has_nodes = doc.extract_boolean("count(//num) > 0").unwrap();
             assert!(has_nodes);
@@ -120,7 +135,12 @@ fn test_concurrent_xpath_types() {
     // 线程 4：字符串查询
     handles.push(thread::spawn(|| {
         for i in 0..100 {
-            let html = format!("<data><num>{}</num><num>{}</num><num>{}</num></data>", i, i + 1, i + 2);
+            let html = format!(
+                "<data><num>{}</num><num>{}</num><num>{}</num></data>",
+                i,
+                i + 1,
+                i + 2
+            );
             let doc = Document::parse(&html).unwrap();
             let text = doc.extract_string("string(//num)").unwrap();
             assert!(!text.is_empty());

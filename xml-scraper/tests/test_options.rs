@@ -77,20 +77,24 @@ fn test_no_blanks_option() {
     </div>"#;
 
     // 不去除空白节点
-    let doc_with_blanks =
-        Document::parse_html_with_options(html, ParseOptions {
+    let doc_with_blanks = Document::parse_html_with_options(
+        html,
+        ParseOptions {
             no_blanks: false,
             ..Default::default()
-        })
-        .unwrap();
+        },
+    )
+    .unwrap();
 
     // 去除空白节点
-    let doc_no_blanks =
-        Document::parse_html_with_options(html, ParseOptions {
+    let doc_no_blanks = Document::parse_html_with_options(
+        html,
+        ParseOptions {
             no_blanks: true,
             ..Default::default()
-        })
-        .unwrap();
+        },
+    )
+    .unwrap();
 
     // 两个文档都应该成功解析
     assert!(!doc_with_blanks.is_empty());

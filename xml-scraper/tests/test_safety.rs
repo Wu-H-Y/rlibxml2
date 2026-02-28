@@ -174,12 +174,7 @@ fn test_xpath_injection_safety() {
     let doc = Document::parse("<div>test</div>").unwrap();
 
     // 这些 XPath 表达式可能有问题，但应该被安全处理
-    let dangerous_xpaths = vec![
-        "//*",
-        "//node()",
-        "//@*",
-        "/descendant::*",
-    ];
+    let dangerous_xpaths = vec!["//*", "//node()", "//@*", "/descendant::*"];
 
     for xpath in dangerous_xpaths {
         // 应该成功或返回错误，但不应该崩溃

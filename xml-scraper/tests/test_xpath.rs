@@ -101,7 +101,9 @@ fn test_xpath_functions() {
     let doc = Document::parse(html).unwrap();
 
     // concat
-    let result = doc.extract_string("concat(//p[1]/text(), ' ', //p[2]/text())").unwrap();
+    let result = doc
+        .extract_string("concat(//p[1]/text(), ' ', //p[2]/text())")
+        .unwrap();
     assert_eq!(result.trim(), "Hello World");
 
     // string-length

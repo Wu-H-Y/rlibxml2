@@ -64,10 +64,7 @@ fn test_real_world_ecommerce_page() {
 
     // 测试提取产品标题
     let titles = doc.extract_texts("//h2[@class='title']").unwrap();
-    assert_eq!(
-        titles,
-        vec!["Laptop Pro", "Wireless Mouse", "USB-C Hub"]
-    );
+    assert_eq!(titles, vec!["Laptop Pro", "Wireless Mouse", "USB-C Hub"]);
 
     // 测试提取价格
     let prices = doc.extract_texts("//p[@class='price']").unwrap();
@@ -245,7 +242,9 @@ fn test_xpath_functions() {
     assert_eq!(count, 5.0);
 
     // 带条件的 count
-    let highlighted_count = doc.extract_number("count(//p[@class='highlight'])").unwrap();
+    let highlighted_count = doc
+        .extract_number("count(//p[@class='highlight'])")
+        .unwrap();
     assert_eq!(highlighted_count, 2.0);
 
     // 布尔表达式
@@ -331,7 +330,10 @@ fn test_node_traversal_completeness() {
     let middle = &children[1];
     let all_siblings = middle.siblings();
     // 过滤只保留元素节点
-    let element_siblings: Vec<_> = all_siblings.iter().filter(|n| n.node_type().is_element()).collect();
+    let element_siblings: Vec<_> = all_siblings
+        .iter()
+        .filter(|n| n.node_type().is_element())
+        .collect();
     assert_eq!(element_siblings.len(), 2);
 }
 

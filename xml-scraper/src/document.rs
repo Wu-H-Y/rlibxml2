@@ -5,7 +5,7 @@
 use crate::error::{Error, Result};
 use crate::node::SelectedNode;
 use crate::options::{ParseOptions, XmlParseOptions};
-use crate::xpath::{evaluate_xpath, XPathResult};
+use crate::xpath::{XPathResult, evaluate_xpath};
 use libxml2_sys::*;
 use std::ffi::CString;
 use std::marker::PhantomData;

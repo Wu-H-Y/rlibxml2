@@ -571,11 +571,6 @@ impl<'a> SelectedNode<'a> {
 
 impl<'a> std::fmt::Display for SelectedNode<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Node({} at {})",
-            self.tag_name(),
-            self.path()
-        )
+        write!(f, "Node({} at {})", self.tag_name(), self.path())
     }
 }

@@ -19,7 +19,7 @@ pub(crate) unsafe fn ptr_to_string(ptr: *const i8) -> String {
         return String::new();
     }
     // SAFETY: 调用者保证 ptr 是有效的 C 字符串指针
-    unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() }
+    unsafe { CStr::from_ptr(ptr.cast()).to_string_lossy().into_owned() }
 }
 
 /// 将 C 字符串指针安全地转换为 Option<String>
@@ -31,7 +31,7 @@ pub(crate) unsafe fn ptr_to_option_string(ptr: *const i8) -> Option<String> {
         return None;
     }
     // SAFETY: 调用者保证 ptr 是有效的 C 字符串指针
-    unsafe { Some(CStr::from_ptr(ptr).to_string_lossy().into_owned()) }
+    unsafe { Some(CStr::from_ptr(ptr.cast()).to_string_lossy().into_owned()) }
 }
 
 // ========================================
@@ -97,7 +97,8 @@ pub unsafe fn node_get_path(node: xmlNodePtr) -> String {
 #[inline]
 pub unsafe fn node_get_type(node: xmlNodePtr) -> i32 {
     // SAFETY: 调用者保证 node 是有效的
-    unsafe { (*node).type_ }
+    // 注意：bindgen 在不同平台生成的 type_ 类型可能不同（u32 或 i32）
+    unsafe { (*node).type_ as i32 }
 }
 
 /// 获取节点的属性值
